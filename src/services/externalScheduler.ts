@@ -80,6 +80,10 @@ class ExternalScheduler {
 
       // Processa cada lead
       for (const lead of leadsForDispatch) {
+        if (!lead.proximoDisparo) {
+          logger.warn(`Lead ${lead.id} sem proximoDisparo, ignorando`);
+          continue;
+        }
         const scheduledTime = new Date(lead.proximoDisparo);
         
         // Verifica se chegou a hora do contato
@@ -230,14 +234,14 @@ class ExternalScheduler {
       const now = new Date();
       
       const nextScheduled = leadsForDispatch
-        .filter(lead => new Date(lead.proximoDisparo) > now)
+        .filter(lead => lead.proximoDisparo && new Date(lead.proximoDisparo) > now)
         .slice(0, 5)
         .map(lead => ({
           leadId: lead.id,
           nome: lead.nome,
           status: lead.statusAtual,
           scheduledFor: lead.proximoDisparo,
-          minutesUntil: Math.round((new Date(lead.proximoDisparo).getTime() - now.getTime()) / (1000 * 60))
+          minutesUntil: lead.proximoDisparo ? Math.round((new Date(lead.proximoDisparo).getTime() - now.getTime()) / (1000 * 60)) : 0
         }));
 
       return {

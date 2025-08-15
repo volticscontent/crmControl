@@ -111,6 +111,11 @@ class ContactService {
       for (let i = 0; i < leadsForDispatch.length; i++) {
         const lead = leadsForDispatch[i];
         
+        if (!lead) {
+          logger.warn(`Lead ${i} is undefined, skipping`);
+          continue;
+        }
+        
         logger.info(`Processing scheduled contact ${i + 1}/${leadsForDispatch.length} - Lead ${lead.id}`);
         
         await this.processContactDispatch(lead);

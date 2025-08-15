@@ -17,10 +17,15 @@ class Database {
     }
 
     return new Promise((resolve, reject) => {
-      // Garante que o diretório existe
-      const dbDir = path.dirname(PATHS.DATABASE);
-      if (!fs.existsSync(dbDir)) {
-        fs.mkdirSync(dbDir, { recursive: true });
+      // Garante que o diretório existe (se não estiver em ambiente serverless)
+      try {
+        const dbDir = path.dirname(PATHS.DATABASE);
+        if (!fs.existsSync(dbDir)) {
+          fs.mkdirSync(dbDir, { recursive: true });
+        }
+      } catch (error) {
+        // Em ambiente serverless pode falhar, mas continuamos
+        logger.warn('Could not create database directory (normal in serverless):', error);
       }
 
       this.db = new sqlite.Database(PATHS.DATABASE, (err) => {

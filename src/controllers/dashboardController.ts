@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
-import { logger } from '../utils/logger';
+import { logger, logCrmAction } from '../utils/logger';
+import { leadService } from '../services/leadService';
+import { mondayService } from '../services/mondayService';
+import { contactService } from '../services/contactService';
+import { database } from '../database/connection';
+import { DEFAULT_CONFIG, PATHS } from '../config/constants';
+import moment from 'moment-timezone';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1273,7 +1279,7 @@ class DashboardController {
   // Endpoint para testar logs
   testLogs = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { logCrmAction } = require('../utils/logger');
+      // logCrmAction já importado no topo
       
       // Gerar alguns logs de teste
       await logCrmAction('test-lead-001', 'TEST_LOG', 'Este é um log de teste para verificar timezone', true, {
@@ -1313,8 +1319,7 @@ class DashboardController {
 
   testCalculateTime = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const moment = require('moment-timezone');
-      const { DEFAULT_CONFIG } = require('../config/constants');
+      // moment e DEFAULT_CONFIG já importados no topo
       
       const timezone = process.env.TIMEZONE || DEFAULT_CONFIG.TIMEZONE;
       const now = moment().tz(timezone);
@@ -1374,8 +1379,7 @@ class DashboardController {
   // Endpoint para listar clientes ativos e em processamento
   getActiveClients = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { leadService } = require('../services/leadService');
-      const database = require('../database/connection').database;
+      // leadService e database já importados no topo
       
       // Busca leads ativos
       const activeLeads = await database.all(`
@@ -1558,7 +1562,7 @@ class DashboardController {
   
   externalSchedulerProcess = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { externalScheduler } = require('../services/externalScheduler');
+      const { externalScheduler } = await import('../services/externalScheduler');
       const source = req.get('User-Agent') || req.body?.source || 'external-service';
       
       logger.info(`ExternalScheduler chamado por: ${source}`);
@@ -1587,7 +1591,7 @@ class DashboardController {
 
   externalSchedulerHealth = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { externalScheduler } = require('../services/externalScheduler');
+      const { externalScheduler } = await import('../services/externalScheduler');
       const health = await externalScheduler.healthCheck();
       
       res.json(health);
@@ -1603,7 +1607,7 @@ class DashboardController {
 
   externalSchedulerConfig = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { externalScheduler } = require('../services/externalScheduler');
+      const { externalScheduler } = await import('../services/externalScheduler');
       const configs = externalScheduler.getExternalSchedulingConfig();
       
       res.json({
@@ -1631,8 +1635,7 @@ class DashboardController {
   // Endpoint para criar endpoints de cron para Vercel (mantido para compatibilidade)
   cronProcessContacts = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { contactService } = require('../services/contactService');
-      const database = require('../database/connection').database;
+      // contactService e database já importados no topo
       
       // Buscar contatos que precisam ser processados (próximo disparo <= agora)
       const pendingContacts = await database.all(`
@@ -1701,7 +1704,7 @@ class DashboardController {
 
   cronHealthCheck = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { leadService } = require('../services/leadService');
+      // leadService já importado no topo
       const stats = await leadService.getLeadStats();
       
       res.json({
@@ -1722,8 +1725,7 @@ class DashboardController {
   // Endpoint para carregar dados da Monday.com e sincronizar
   getMondayData = asyncHandler(async (req: Request, res: Response) => {
     try {
-      const { mondayService } = require('../services/mondayService');
-      const database = require('../database/connection').database;
+      // mondayService e database já importados no topo
       
       const token = process.env.MONDAY_API_TOKEN;
       const boardId = process.env.MONDAY_BOARD_ID;
@@ -1952,7 +1954,7 @@ class DashboardController {
         EVOLUTION_INSTANCE_NAME: !!process.env.EVOLUTION_INSTANCE_NAME
       },
       database: {
-        path: require('../config/constants').PATHS.DATABASE,
+        path: PATHS.DATABASE,
         accessible: false
       },
       logging: {
@@ -1972,7 +1974,7 @@ class DashboardController {
 
     // Verificar acesso ao banco
     try {
-      const { database } = require('../database/connection');
+      // database já importado no topo
       await database.get('SELECT 1');
       checks.database.accessible = true;
     } catch (error) {

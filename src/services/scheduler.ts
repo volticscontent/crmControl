@@ -150,7 +150,7 @@ class SchedulerService {
   getJobsStatus(): any[] {
     return this.jobs.map((job, index) => ({
       id: index,
-      running: job.running || false
+      running: false // job.running não existe no tipo ScheduledTask
     }));
   }
 

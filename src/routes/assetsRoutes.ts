@@ -156,10 +156,10 @@ router.get('/api', asyncHandler(async (req: Request, res: Response) => {
       };
     });
 
-    res.json({ files });
+    return res.json({ files });
   } catch (error) {
     logger.error('Error listing assets via API:', error);
-    res.status(500).json({ error: 'Erro ao listar arquivos' });
+    return res.status(500).json({ error: 'Erro ao listar arquivos' });
   }
 }));
 

@@ -87,14 +87,19 @@ class EvolutionService {
       const audioBuffer = fs.readFileSync(audioFullPath);
       const audioBase64 = audioBuffer.toString('base64');
       
+      const mediaPayload: any = {
+        mediatype: 'audio',
+        fileName: path.basename(audioPath),
+        media: audioBase64
+      };
+      
+      if (caption) {
+        mediaPayload.caption = caption;
+      }
+      
       const payload: EvolutionSendMessagePayload = {
         number: cleanPhone,
-        media: {
-          mediatype: 'audio',
-          fileName: path.basename(audioPath),
-          caption,
-          media: audioBase64
-        }
+        media: mediaPayload
       };
 
       await this.makeRequest(`message/sendMedia/${this.instanceName}`, payload);

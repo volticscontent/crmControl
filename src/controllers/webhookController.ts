@@ -12,7 +12,8 @@ class WebhookController {
   // Função para verificar e processar contatos pendentes automaticamente
   private async checkPendingContacts(): Promise<void> {
     try {
-      const { externalScheduler } = require('../services/externalScheduler');
+      // Import estático para evitar problemas em serverless
+      const { externalScheduler } = await import('../services/externalScheduler');
       
       // Dispara processamento completo via ExternalScheduler
       logger.info('🔄 Webhook trigger: Verificando contatos pendentes via ExternalScheduler');
@@ -24,7 +25,7 @@ class WebhookController {
   }
 
   // Webhook do Monday.com
-  mondayWebhook = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  mondayWebhook = asyncHandler(async (req: Request, res: Response) => {
     // Sistema de challenge do Monday.com
     // Quando você configura o webhook no Monday.com, ele envia um challenge
     // que precisamos retornar para validar a URL
@@ -136,7 +137,7 @@ class WebhookController {
       MONDAY_STATUS.ULTIMO_CONTATO
     ];
 
-    if (!validStatuses.includes(newStatus)) {
+    if (!validStatuses.includes(newStatus as any)) {
       logger.info('Event ignored - not a contact status', { 
         itemId, 
         receivedStatus: newStatus, 
@@ -179,7 +180,7 @@ class WebhookController {
         logCrmAction(itemId, 'WEBHOOK_PROCESSED', `Erro ao processar Monday webhook: ${newStatus}`, false);
       }
 
-      res.status(200).json({ 
+      return res.status(200).json({ 
         message: 'Webhook processed successfully',
         success,
         leadId: itemId
@@ -196,7 +197,7 @@ class WebhookController {
   });
 
   // Webhook da Evolution API (WhatsApp)
-  evolutionWebhook = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
+  evolutionWebhook = asyncHandler(async (req: Request, res: Response) => {
     const payload: EvolutionWebhookPayload = req.body;
     
     logger.info('Evolution webhook received:', {
@@ -231,7 +232,7 @@ class WebhookController {
         logger.info(`Client response ignored or failed for phone ${normalizedPhone}`);
       }
 
-      res.status(200).json({ 
+      return res.status(200).json({ 
         message: 'Client response processed',
         success,
         phone: normalizedPhone,
