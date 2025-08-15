@@ -1,187 +1,293 @@
-# 🤖 API CRM Automatizado
+# 🤖 CRM Control - Sistema Automatizado de Contatos SDR
 
-Sistema automatizado de contatos SDR integrado com Monday.com e Evolution API (WhatsApp).
+Sistema completo de automação de contatos SDR integrado com Monday.com e Evolution API (WhatsApp), com dashboard em tempo real e logs detalhados.
 
-## 📋 Funcionalidades
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Node](https://img.shields.io/badge/Node-18%2B-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
 
-- ✅ **Webhooks**: Monday.com e Evolution API
-- ✅ **Agendamento**: Contatos automáticos +24h em horário comercial
-- ✅ **4 Tipos de Contato**: Primeiro, Segundo, Terceiro, Último
-- ✅ **Monitoramento**: Dashboard web em tempo real
-- ✅ **Logs**: Sistema completo de auditoria
-- ✅ **Base de Dados**: SQLite para controle local
-- ✅ **Assets**: Textos e áudios personalizados
+## ✨ Funcionalidades
+
+### 🚀 **Core Features**
+- ✅ **Webhooks Automáticos**: Monday.com e Evolution API
+- ✅ **Agendamento Inteligente**: +24h em horário comercial (9h-18h)
+- ✅ **4 Tipos de Contato**: Primeiro → Segundo → Terceiro → Último
+- ✅ **Dashboard em Tempo Real**: Monitoramento completo
+- ✅ **Logs Detalhados**: Auditoria completa com timezone Brasília
+- ✅ **Base de Dados Local**: SQLite para controle offline
+
+### 📊 **Dashboard Features**
+- ✅ **Relógio Brasília**: Tempo real no header
+- ✅ **Status APIs**: Monday.com e Evolution em tempo real
+- ✅ **Visualização Monday.com**: Tabela sincronizada
+- ✅ **Clientes Ativos**: Lista local com filtros
+- ✅ **Últimas Ações**: Logs detalhados com timezone
+- ✅ **Auto-refresh**: Intervalos otimizados
+
+### 🔧 **Produção Ready**
+- ✅ **Vercel Deploy**: Configuração completa
+- ✅ **Cron Jobs**: Automação de tarefas
+- ✅ **Error Handling**: Tratamento robusto
+- ✅ **Security**: Helmet + CSP + CORS
+- ✅ **Health Checks**: Monitoramento contínuo
 
 ## 🚀 Deploy Rápido
 
-### 1. Clone e Instale
+### **1. Clone e Instale**
 ```bash
-git clone <repo>
-cd apiCrm
+git clone https://github.com/volticscontent/crmControl.git
+cd crmControl
 npm install
 ```
 
-### 2. Configure Variáveis de Ambiente
-```bash
-cp .env.example .env
-# Edite o .env com suas credenciais
-```
-
-### 3. Execute
-```bash
-# Desenvolvimento
-npm run dev
-
-# Produção
-npm run build
-npm start
-```
-
-## 🔧 Configuração
-
-### Variáveis de Ambiente Obrigatórias
-
+### **2. Configure Variáveis de Ambiente**
 ```env
-# Monday.com API
-MONDAY_API_TOKEN=your_monday_api_token_here
-MONDAY_BOARD_ID=your_board_id_here
+# Ambiente
+NODE_ENV=production
+TZ=America/Sao_Paulo
 
-# Evolution API (WhatsApp)  
-EVOLUTION_API_URL=https://your-evolution-api-url.com
-EVOLUTION_API_KEY=your_evolution_api_key_here
-EVOLUTION_INSTANCE_NAME=your_instance_name_here
+# Monday.com API
+MONDAY_API_TOKEN=seu_token_monday_aqui
+MONDAY_BOARD_ID=id_do_board_aqui
+
+# Evolution API (WhatsApp)
+EVOLUTION_API_URL=https://sua-evolution-api.com
+EVOLUTION_API_KEY=sua_chave_api_aqui
+EVOLUTION_INSTANCE_NAME=nome_instancia_aqui
 ```
 
-### Estrutura Monday.com
+### **3. Deploy no Vercel**
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
 
-O sistema espera estas colunas no seu board:
-- **Nome**: Nome do lead
-- **Telefone**: Número WhatsApp (campo phone)
-- **Contato SDR Realizado**: Status dos contatos (ID: `color_mkt8t95b`)
-- **Próximo ctt**: Data do próximo contato (ID: `date_mkt8ccx4`)
+# Deploy
+vercel --prod
+
+# Configurar variáveis no dashboard Vercel
+```
+
+### **4. Configure Webhooks**
+- **Monday.com**: `https://seudominio.com/webhook/monday`
+- **Evolution API**: `https://seudominio.com/webhook/evolution`
 
 ## 📱 Endpoints
 
-### Webhooks
-- `POST /webhook/monday` - Recebe mudanças do Monday.com
-- `POST /webhook/evolution` - Recebe mensagens do WhatsApp
+### **Dashboard e Monitoramento**
+- `GET /dashboard` - Dashboard principal com relógio
+- `GET /monitor` - Alias do dashboard
+- `GET /health` - Health check básico
+- `GET /api/production-ready` - Verificação completa
 
-### Monitoramento
-- `GET /monitor` - Dashboard web
-- `GET /api/stats` - Estatísticas JSON
-- `POST /api/manual-dispatch` - Disparo manual
+### **APIs de Dados**
+- `GET /api/status` - Status das APIs
+- `GET /api/clients` - Clientes ativos
+- `GET /api/monday/data` - Dados Monday.com
+- `GET /api/logs` - Logs do sistema
 
-### Assets
-- `GET /assets/:filename` - Serve arquivos de texto/áudio
+### **Webhooks**
+- `POST /webhook/monday` - Recebe mudanças Monday.com
+- `POST /webhook/evolution` - Recebe mensagens WhatsApp
 
-## 📁 Estrutura de Arquivos
+### **Cron Jobs (Vercel)**
+- `/api/cron/process-contacts` - Processa contatos (1h)
+- `/api/cron/health-check` - Health check (10min)
 
-```
-assets/
-├── primeiro-contato.txt    # Texto primeiro contato
-├── primeiro-contato.mp3    # Áudio primeiro contato (opcional)
-├── segundo-contato.txt     # Texto segundo contato
-├── terceiro-contato.txt    # Texto terceiro contato
-└── ultimo-contato.txt      # Texto último contato
-```
+## ⚙️ Configuração Monday.com
 
-### Personalização de Mensagens
+### **Board Structure**
+| Coluna | ID | Tipo | Descrição |
+|--------|----|----- |-----------|
+| Nome | `name` | Text | Nome do lead |
+| Telefone | `phone_mkt8s8kn` | Phone | WhatsApp |
+| Contato SDR | `color_mkt8t95b` | Status | Etapa atual |
+| Próximo Contato | `date_mkt8ccx4` | Date | Data agendada |
 
-Use `{nome}` nos arquivos .txt para personalizar:
-```txt
-Oi {nome}! 👋
+### **Status Possíveis**
+- `Primeiro Contato` → `Segundo Contato`
+- `Segundo Contato` → `Terceiro Contato`
+- `Terceiro Contato` → `Ultimo Contato`
+- `Ultimo Contato` → `Não Respondeu`
+- `Aguardando Ligação` (cliente respondeu)
 
-Tudo bem? Aqui é da equipe...
-```
+## 🕐 Sistema de Tempo
 
-## ⏰ Funcionamento
-
-### Fluxo Automático
-1. **Monday webhook** → Mudança status "Contato SDR Realizado"
-2. **Sistema processa** → Lê arquivo de texto correspondente
-3. **Envia mensagem** → WhatsApp via Evolution API
-4. **Agenda próximo** → +24h em horário comercial
-5. **Repete** → Até "Último Contato" ou resposta do cliente
-
-### Horário Comercial
+### **Horário Comercial**
 - **Segunda a Sexta**: 9h às 18h (Brasília)
-- **Fins de semana**: Agenda para segunda-feira
-- **Fora do horário**: Agenda para próximo dia útil
+- **Fim de semana**: Agenda para segunda-feira 9h
+- **Fora do horário**: Próximo dia útil 9h
 
-### Interrupção Automática
-- **Cliente responde** → Status vira "Aguardando Ligação"
-- **Sequência para** → Remove agendamentos futuros
+### **Relógio Dashboard**
+- **Localização**: Header principal
+- **Formato**: HH:MM:SS (24h)
+- **Timezone**: America/Sao_Paulo
+- **Atualização**: 1 segundo
 
-## 🖥️ Dashboard
+### **Logs com Timezone**
+- **Horário exato**: Brasília
+- **Tempo relativo**: "5min atrás"
+- **Servidor info**: Timezone interpretado
 
-Acesse `/monitor` para ver:
-- 📊 Estatísticas de leads
-- 📋 Status dos contatos  
-- 🔗 Status dos serviços
-- ⚡ Ações manuais
-- 📝 Logs do sistema
+## 📊 Dashboard Features
+
+### **🕐 Relógio em Tempo Real**
+```
+🤖 Dashboard CRM Automatizado    🕐 Brasília: 14:30:25
+```
+
+### **📈 Auto-refresh**
+- **Logs**: 30s
+- **Clientes**: 15s  
+- **Monday.com**: 1h
+- **Status APIs**: 2min
+
+### **🔧 Status dos Serviços**
+- Monday.com API: Status em tempo real
+- Evolution API: Conectividade
+- Database SQLite: Local
+- Scheduler: Cron jobs
 
 ## 🔍 Monitoramento
 
-### Health Checks
+### **Health Checks**
 ```bash
-curl http://localhost:3000/health
-curl http://localhost:3000/webhook/health  
-curl http://localhost:3000/api/health
+# Básico
+curl https://seudominio.com/health
+
+# Prontidão para produção
+curl https://seudominio.com/api/production-ready
+
+# Status das APIs
+curl https://seudominio.com/api/status
 ```
 
-### Logs
-- **Arquivo**: `logs/app.log`, `logs/error.log`, `logs/crm-actions.log`
-- **Retenção**: 7 dias
-- **API**: `GET /api/logs`
+### **Dashboard Web**
+- **URL**: `https://seudominio.com/dashboard`
+- **Funcionalidades**: Tempo real, filtros, logs
+- **Mobile**: Responsivo
 
-## 🛠️ Desenvolvimento
+## 📁 Estrutura do Projeto
 
-### Scripts Disponíveis
-```bash
-npm run dev          # Desenvolvimento com hot reload
-npm run build        # Build para produção  
-npm run start        # Executa build de produção
-npm run lint         # Executa linter
-npm run format       # Formata código
-```
-
-### Estrutura do Projeto
 ```
 src/
-├── controllers/     # Controladores das rotas
-├── services/       # Lógica de negócio
-├── routes/         # Definição de rotas
-├── database/       # Conexão e queries do banco
-├── middleware/     # Middlewares Express
-├── types/          # Definições TypeScript
-├── config/         # Constantes e configurações
-└── utils/          # Utilitários gerais
+├── controllers/          # Controladores das rotas
+│   ├── dashboardController.ts    # Dashboard com relógio
+│   └── webhookController.ts      # Webhooks Monday/Evolution
+├── services/             # Lógica de negócio
+│   ├── leadService.ts            # Gestão de leads + tempo
+│   ├── mondayService.ts          # API Monday.com
+│   └── evolutionService.ts       # API Evolution
+├── database/             # SQLite
+│   └── connection.ts             # Conexão e schemas
+├── utils/                # Utilitários
+│   └── logger.ts                 # Logs com timezone
+├── config/               # Configurações
+│   └── constants.ts              # Constantes e horários
+└── index.ts              # Servidor principal
 ```
 
-## 🚀 Deploy Vercel
+## 🛡️ Segurança
 
-1. **Connect ao GitHub**
-2. **Configure Environment Variables** (mesmo do .env)
-3. **Deploy automático** ✅
+### **Headers de Segurança**
+```javascript
+// Helmet.js configurado
+contentSecurityPolicy: {
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'", "'unsafe-inline'"],
+    styleSrc: ["'self'", "'unsafe-inline'"]
+  }
+}
+```
 
-O `vercel.json` já está configurado.
+### **Tratamento de Erros**
+- **Uncaught Exceptions**: Logged e restart
+- **Unhandled Rejections**: Logged e restart
+- **API Errors**: Sanitizados em produção
+- **Database Errors**: Retry automático
 
-## 🔒 Segurança
+## 🚀 Performance
 
-- ✅ Headers de segurança (Helmet)
-- ✅ Validação de webhooks
-- ✅ Sanitização de inputs
-- ✅ Rate limiting implícito
-- ✅ Logs de auditoria
+### **Vercel Optimizations**
+- **Região**: Brasil (gru1)
+- **Timeout**: 30s para funções pesadas
+- **Caching**: Headers otimizados
+- **Cron Jobs**: Background automático
+
+### **Database**
+- **SQLite**: Leve e rápido
+- **Índices**: Otimizados para queries
+- **Path**: `/tmp/crm.db` (produção)
+
+## 📝 Scripts Disponíveis
+
+```bash
+# Desenvolvimento
+npm run dev              # Hot reload
+npm run start:prod       # Produção local
+
+# Verificações
+npm run production-check # Prontidão
+npm run health-check     # Health básico
+
+# Code quality
+npm run lint             # ESLint
+npm run format           # Prettier
+```
+
+## 🔧 Troubleshooting
+
+### **Problemas Comuns**
+
+1. **APIs não conectam**
+   ```bash
+   # Verificar variáveis
+   curl /api/production-ready
+   
+   # Testar conexões
+   curl /api/test/monday
+   curl /api/test/evolution
+   ```
+
+2. **Webhook não funciona**
+   ```bash
+   # Testar endpoint
+   curl -X POST /webhook/monday -d '{"test":true}'
+   ```
+
+3. **Relógio não atualiza**
+   - Verificar JavaScript habilitado
+   - Console do navegador para erros
+   - Timezone do sistema
+
+### **Logs de Debug**
+```bash
+# Vercel logs
+vercel logs --follow
+
+# Local logs
+tail -f logs/app.log
+```
+
+## 📄 License
+
+MIT License - veja [LICENSE](LICENSE) para detalhes.
+
+## 👥 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
 
 ## 📞 Suporte
 
-Para dúvidas:
-1. Verifique logs: `/monitor` ou `logs/`
-2. Health check: `/health`
-3. Stats: `/api/stats`
+- **Issues**: [GitHub Issues](https://github.com/volticscontent/crmControl/issues)
+- **Documentação**: Este README
+- **Dashboard**: `/dashboard` para monitoramento
 
-## 📄 Licença
+---
 
-ISC License
+🤖 **CRM Control** - Automação inteligente para SDRs com monitoramento em tempo real.
