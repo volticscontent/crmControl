@@ -1554,7 +1554,81 @@ class DashboardController {
     }
   }
 
-  // Endpoint para criar endpoints de cron para Vercel
+  // 🎯 EXTERNAL SCHEDULER ENDPOINTS - Estratégia robusta para Vercel Hobby
+  
+  externalSchedulerProcess = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { externalScheduler } = require('../services/externalScheduler');
+      const source = req.get('User-Agent') || req.body?.source || 'external-service';
+      
+      logger.info(`ExternalScheduler chamado por: ${source}`);
+      
+      const result = await externalScheduler.processScheduledContacts();
+      
+      res.json({
+        ...result,
+        source,
+        message: result.success 
+          ? `Processamento concluído: ${result.processed} contatos enviados, ${result.pending} pendentes`
+          : 'Erro no processamento de contatos'
+      });
+    } catch (error) {
+      logger.error('Error in externalSchedulerProcess:', error);
+      res.status(500).json({
+        success: false,
+        processed: 0,
+        pending: 0,
+        details: [],
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  externalSchedulerHealth = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { externalScheduler } = require('../services/externalScheduler');
+      const health = await externalScheduler.healthCheck();
+      
+      res.json(health);
+    } catch (error) {
+      logger.error('Error in externalSchedulerHealth:', error);
+      res.status(500).json({
+        status: 'error',
+        timestamp: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  externalSchedulerConfig = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { externalScheduler } = require('../services/externalScheduler');
+      const configs = externalScheduler.getExternalSchedulingConfig();
+      
+      res.json({
+        success: true,
+        message: 'Configurações para serviços externos de cron',
+        configs,
+        instructions: {
+          step1: 'Escolha um dos serviços externos listados',
+          step2: 'Configure um cron job apontando para o endpoint fornecido',
+          step3: 'Use o intervalo sugerido (pode ajustar conforme necessário)',
+          step4: 'Monitore via /api/external-scheduler/health',
+          note: 'Recomendado: EasyCron.com para facilidade ou cron-job.org para jobs ilimitados'
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      logger.error('Error in externalSchedulerConfig:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Endpoint para criar endpoints de cron para Vercel (mantido para compatibilidade)
   cronProcessContacts = asyncHandler(async (req: Request, res: Response) => {
     try {
       const { contactService } = require('../services/contactService');

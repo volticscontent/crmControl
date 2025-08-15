@@ -3,7 +3,10 @@
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "maxDuration": 30
+      }
     }
   ],
   "routes": [
@@ -12,27 +15,11 @@
       "dest": "/src/index.ts"
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "functions": {
-    "src/index.ts": {
-      "maxDuration": 30,
-      "regions": ["gru1"]
-    }
-  },
+  "regions": ["gru1"],
   "crons": [
     {
-      "path": "/api/cron/process-contacts",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/cron/health-check", 
-      "schedule": "*/10 * * * *"
-    },
-    {
-      "path": "/api/monday/data",
-      "schedule": "0 */1 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }

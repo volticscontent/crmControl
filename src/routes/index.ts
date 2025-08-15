@@ -50,8 +50,13 @@ export function setupRoutes(app: Express): void {
   app.get('/api/monday/data', dashboardController.getMondayData);
   
   // Endpoints para cron jobs do Vercel
-  app.get('/api/cron/process-contacts', dashboardController.cronProcessContacts);
   app.get('/api/cron/health-check', dashboardController.cronHealthCheck);
+  
+  // 🎯 ExternalScheduler endpoints (estratégia robusta para Vercel Hobby)
+  app.get('/api/external-scheduler/process', dashboardController.externalSchedulerProcess);
+  app.post('/api/external-scheduler/process', dashboardController.externalSchedulerProcess);
+  app.get('/api/external-scheduler/health', dashboardController.externalSchedulerHealth);
+  app.get('/api/external-scheduler/config', dashboardController.externalSchedulerConfig);
 
   // Rota 404
   app.use('*', (req: Request, res: Response) => {

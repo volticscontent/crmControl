@@ -9,6 +9,20 @@ import { logger, logCrmAction } from '../utils/logger';
 import { MONDAY_COLUMNS, MONDAY_STATUS } from '../config/constants';
 
 class WebhookController {
+  // Função para verificar e processar contatos pendentes automaticamente
+  private async checkPendingContacts(): Promise<void> {
+    try {
+      const { externalScheduler } = require('../services/externalScheduler');
+      
+      // Dispara processamento completo via ExternalScheduler
+      logger.info('🔄 Webhook trigger: Verificando contatos pendentes via ExternalScheduler');
+      externalScheduler.processScheduledContacts(); // Não aguarda, executa em background
+      
+    } catch (error) {
+      logger.error('Erro ao disparar verificação via ExternalScheduler:', error);
+    }
+  }
+
   // Webhook do Monday.com
   mondayWebhook = asyncHandler(async (req: Request, res: Response): Promise<Response> => {
     // Sistema de challenge do Monday.com
@@ -38,6 +52,9 @@ class WebhookController {
       eventValue: payload.event.value,
       timestamp: new Date().toISOString()
     });
+
+    // 🎯 Verificação imediata de contatos pendentes no webhook
+    this.checkPendingContacts(); // Não aguarda, executa em background
 
     // Verifica se é mudança na coluna de status "Contato SDR Realizado"
     if (payload.event.columnId !== MONDAY_COLUMNS.CONTATO_SDR_REALIZADO) {

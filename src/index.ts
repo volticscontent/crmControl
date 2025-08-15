@@ -74,15 +74,16 @@ async function startServer() {
     await initializeDatabase();
     logger.info('Database initialized successfully');
 
-    // Jobs de agendamento desabilitados para simplificação
-    // setupCronJobs();
-    logger.info('Sistema simplificado inicializado');
+    // 🎯 ExternalScheduler (estratégia robusta para Vercel Hobby)
+    logger.info('🤖 ExternalScheduler configurado - use serviços externos para cron jobs');
+    logger.info('📋 Veja configurações em: /api/external-scheduler/config');
 
     // Inicia servidor
     app.listen(PORT, () => {
       logger.info(`🚀 Servidor CRM rodando na porta ${PORT}`);
       logger.info(`🌍 Ambiente: ${process.env.NODE_ENV || 'development'}`);
       logger.info(`⏰ Timezone: ${process.env.TIMEZONE || 'America/Sao_Paulo'}`);
+      logger.info(`🎯 SmartScheduler: Self-renewing + Webhook-triggered + Client-side triggered`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

@@ -40,8 +40,8 @@ const transports: winston.transport[] = [
   })
 ];
 
-// Em produção no Vercel, só usar console
-if (process.env.NODE_ENV !== 'production') {
+// Em produção ou ambiente serverless (Vercel), só usar console
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   ensureLogDir();
   
   transports.push(
