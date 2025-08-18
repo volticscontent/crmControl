@@ -1709,6 +1709,9 @@ class DashboardController {
         </div>
 
         <!-- JavaScript removido para arquivo separado -->
+            
+            // Tab Navigation
+            function showTab(tabName) {
                 // Hide all tabs
                 document.querySelectorAll('.tab-content').forEach(tab => {
                     tab.classList.remove('active');
