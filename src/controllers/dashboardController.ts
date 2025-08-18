@@ -2509,14 +2509,8 @@ class DashboardController {
                 } else {
                     healthStatus.textContent = 'Dados indisponíveis';
                     healthStatus.style.color = 'var(--text-muted)';
-                }\${new Date(error.timestamp).toLocaleString()}</div>
-                            <div class="error-operation">\${error.operation}</div>
-                            <div class="error-message">\${error.error_message || 'Unknown error'}</div>
-                        </div>
-                    \`).join('');
-                } else {
-                    errorsContainer.innerHTML = '<div class="no-errors">✅ Nenhum erro recente</div>';
                 }
+            }
                 
                 // Atualizar top operações
                 const operationsContainer = document.getElementById('top-operations');
