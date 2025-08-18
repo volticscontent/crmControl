@@ -1,0 +1,27 @@
+Webhook/monday-> Coluna de Status "Contato SDR Realizado" [ Primeiro Contato, Segundo, Terceiro, Ultimo Contato ]
+    { 
+       Post/mondayApi -> Conseguir número e nome do cliente Junto com outros campos da table
+        Step/inteligente -> Entender qual Contato estamos e a data especifica que deve ser a variavel controladora para formular Contato+24Horas da coluna Próximo ctt
+          Get/server -> Pastas com o audio e os textos especificas [ Primeiro Contato, Segundo, Terceiro, Ultimo Contato ]
+            Post/EvoApi -> Envio [ Primeiro Contato, Segundo, Terceiro, Ultimo Contato ]
+              Post/mondayApi -> {
+               Passar o Status "Contato SDR Realizado" para o próximo contato (
+               Condicional: Caso o Status for "Ultimo Contato" mudar Status para "Não Respondeu" e remover data da coluna Próximo ctt )
+               } 
+                 Post/mondayApi -> Marcar data do próximo disparo (conforme o evento Primeiro contato 24/depois e assim por diante até o último sendo 4 contatos em 4 dias)
+                Condicional: Caso o Status for "Ultimo Contato" mudar Status para "Não Respondeu" e remover data da coluna Próximo ctt )
+               } 
+    }
+
+Webhook/evoApi -> Qualquer Mensagem do cliente
+Condicional: Mudar Status para "Aguardando Ligação" e remover data da coluna Próximo ctt 
+
+Requisitos 
+api/rest automatizada com endpoint para evoApi/Webhook "recebe a mensagem do cliente para parar o fluxo" e outro endpoint para mondayApi/Webhook "recebe o primeiro contato"
++ rotas para Posts/mondayApi
++ rota exclusiva para Get/server interno ou dentro da pasta fonte do projeto 
+
+SSR funcionando all time e conectado com o monday para maior assertividade possivel
+Sem testes complexos e com base nas apis e boas praticas
+
+

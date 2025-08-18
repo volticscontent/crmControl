@@ -18,27 +18,36 @@ export const MONDAY_STATUS = {
   AGUARDANDO_LIGACAO: 'Aguardando Ligação'
 } as const;
 
-// Configuração dos tipos de contato
+// 🎯 CONFIGURAÇÃO PLAYBOOK BOT - Mensagens profissionais atualizadas
 export const CONTATOS_CONFIG: Record<ContatoTipo, ContatoConfig> = {
   'Primeiro Contato': {
     tipo: 'Primeiro Contato',
-    arquivoTexto: 'primeiro-contato.txt',
-    arquivoAudio: 'primeiro-contato.mp3',
+    arquivoTexto: 'Primeiro Contato/TXT PRIMEIRO CONTATO.txt',
+    arquivoAudio: 'Primeiro Contato/WhatsApp Ptt 2025-08-15 at 15.27.15.ogg',
+    mensagemTexto: `Boa tarde {nome}! Tudo bem?`,
     proximoTipo: 'Segundo Contato'
   },
   'Segundo Contato': {
     tipo: 'Segundo Contato',
-    arquivoTexto: 'segundo-contato.txt',
+    arquivoTexto: 'Segundo Contato/TXT SEGUNDO CONTATO.txt',
+    mensagemTexto: `{nome}, tudo bem?
+
+É realmente do seu interesse entender como estruturar uma operação de Drop Global para faturar 50 mil euros por mês?`,
     proximoTipo: 'Terceiro Contato'
   },
   'Terceiro Contato': {
     tipo: 'Terceiro Contato',
-    arquivoTexto: 'terceiro-contato.txt',
+    arquivoTexto: 'Terceiro Contato/TXT TERCEIRO CONTATO.txt',
+    mensagemTexto: `{nome}, devido a falta de resposta, entendemos que não é do seu interesse entender como você pode faturar 50 mil euros por mês.
+
+Com isso iremos tirar você da nossa base de contatos. Caso seja do seu interesse trocar essa papo, pode me sinalizar aqui.`,
     proximoTipo: 'Ultimo Contato'
   },
   'Ultimo Contato': {
     tipo: 'Ultimo Contato',
-    arquivoTexto: 'ultimo-contato.txt'
+    arquivoTexto: 'Ultimo Contato/TXT ULTIMO CONTATO.txt',
+    mensagemTexto: `{nome}, devido a falta de retorno, estamos tirando você da nossa lista. De qualquer maneira, obrigado.`,
+    proximoTipo: null
   }
 };
 
@@ -54,7 +63,7 @@ export const DEFAULT_CONFIG = {
 
 // Paths dos arquivos
 export const PATHS = {
-  ASSETS: './assets',
+  ASSETS: process.env.NODE_ENV === 'production' ? process.cwd() + '/public/assets' : './assets',
   DATABASE: process.env.DATABASE_PATH || (process.env.NODE_ENV === 'production' ? '/tmp/crm.db' : './data/crm.db'),
   LOGS: process.env.NODE_ENV === 'production' ? '/tmp/logs' : './logs'
 } as const;

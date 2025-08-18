@@ -1,0 +1,22 @@
+ID,Frase,Descrição,Nomes de app,Responsável,Estado,Atualizado às
+459442602,"When Contato SDR Realizado? changes to Ultimo Contato, send a webhook",,"Webhooks","Maximize Digital","active","ago 16, 2025, 12:38 AM"
+459441502,"When Contato SDR Realizado? changes to Terceiro Contato, send a webhook",,"Webhooks","Maximize Digital","active","ago 16, 2025, 12:22 AM"
+459441483,"When Contato SDR Realizado? changes to Segundo Contato, send a webhook",,"Webhooks","Maximize Digital","active","ago 16, 2025, 12:22 AM"
+459439104,"When Proximo ctt arrives and only if Contato SDR Realizado? is Terceiro Contato set Contato SDR Realizado? to Ultimo Contato",,"","Maximize Digital","active","ago 15, 2025, 11:46 PM"
+459439083,"When Proximo ctt arrives and only if Contato SDR Realizado? is Segundo Contato set Contato SDR Realizado? to Terceiro Contato",,"","Maximize Digital","active","ago 15, 2025, 11:45 PM"
+459427369,"When Proximo ctt arrives and only if Contato SDR Realizado? is Primeiro Contato set Contato SDR Realizado? to Segundo Contato",,"","Maximize Digital","active","ago 15, 2025, 11:44 PM"
+459067490,"When Contato SDR Realizado? changes to Primeiro Contato, send a webhook",,"Webhooks","Maximize Digital","active","ago 15, 2025, 12:40 AM"
+451387098,"When Compareceu na Call? changes to Sim
+ move item to 4.  Call",,"","Maximize Digital","active","jul 27, 2025, 12:15 AM"
+451387022,"When Fechou? changes to Em negociação
+ move item to RMKT Fechamento",,"","Maximize Digital","active","jul 27, 2025, 12:13 AM"
+451387012,"When Fechou? changes to Não
+ move item to RMKT Fechamento",,"","Maximize Digital","active","jul 27, 2025, 12:13 AM"
+451386984,"When Fechou? changes to Sim
+ move item to Clientes",,"","Maximize Digital","active","jul 27, 2025, 12:12 AM"
+451386960,"When Compareceu na Call? changes to Não
+ move item to RMKT Call",,"","Maximize Digital","active","jul 27, 2025, 12:12 AM"
+451386863,"When Funil de Aquecimento changes to Iniciado
+ move item to 3. Aquecimento Reunião",,"","Maximize Digital","active","jul 27, 2025, 12:10 AM"
+451386630,"When Agendou no Calendly? changes from anything to Agendado
+ move item to 2. Reunião Agendada",,"","Maximize Digital","active","jul 27, 2025, 12:09 AM"

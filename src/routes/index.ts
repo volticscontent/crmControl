@@ -1,6 +1,7 @@
 import { Express, Request, Response } from 'express';
 import { webhookController } from '../controllers/webhookController';
 import { dashboardController } from '../controllers/dashboardController';
+import assetsRouter from './assetsRoutes';
 
 export function setupRoutes(app: Express): void {
   // Rota raiz
@@ -35,28 +36,56 @@ export function setupRoutes(app: Express): void {
   app.post('/webhook/evolution', webhookController.evolutionWebhook);
   app.get('/webhook/health', webhookController.healthCheck);
   
+  // Endpoint de teste para webhook Monday
+  app.post('/webhook/test/monday', webhookController.testMondayWebhook);
+  
+
+  
   // Dashboard principal
   app.get('/dashboard', dashboardController.dashboard);
   app.get('/config', dashboardController.dashboard); // Alias
   app.get('/monitor', dashboardController.dashboard); // Alias
   
-  // APIs do dashboard
+  // APIs do dashboard simplificadas
   app.get('/api/logs', dashboardController.getLogs);
+  app.get('/api/logs/detailed', dashboardController.getDetailedLogs);
   app.get('/api/status', dashboardController.getStatus);
-  app.get('/api/test/monday', dashboardController.testMonday);
+  
+  // Assets (arquivos de texto e áudio)
+  app.use('/assets', assetsRouter);
+  
+  // 🎯 Novos endpoints para melhor monitoramento
+  app.get('/api/leads', dashboardController.getLeads);
+  app.get('/api/webhook-logs', dashboardController.getWebhookLogs);
   app.get('/api/test/evolution', dashboardController.testEvolution);
-  app.get('/api/test/calculate-time', dashboardController.testCalculateTime);
-  app.get('/api/clients', dashboardController.getActiveClients);
-  app.get('/api/monday/data', dashboardController.getMondayData);
+  app.get('/api/test/monday', dashboardController.testMonday);
+
+  // 📊 Analytics e métricas
+  app.get('/api/analytics', dashboardController.getAnalytics);
+  app.get('/api/system-health', dashboardController.getSystemHealth);
   
-  // Endpoints para cron jobs do Vercel
-  app.get('/api/cron/health-check', dashboardController.cronHealthCheck);
-  
-  // 🎯 ExternalScheduler endpoints (estratégia robusta para Vercel Hobby)
-  app.get('/api/external-scheduler/process', dashboardController.externalSchedulerProcess);
-  app.post('/api/external-scheduler/process', dashboardController.externalSchedulerProcess);
-  app.get('/api/external-scheduler/health', dashboardController.externalSchedulerHealth);
-  app.get('/api/external-scheduler/config', dashboardController.externalSchedulerConfig);
+  // 🔍 Debug e testes detalhados
+  app.get('/api/debug/env', dashboardController.debugEnvVars);
+  app.get('/api/test/evolution/status', dashboardController.testEvolutionStatus);
+  app.get('/api/test/evolution/info', dashboardController.testEvolutionInfo);
+  app.post('/api/test/evolution/message', dashboardController.testEvolutionMessage);
+  app.post('/api/test/evolution/audio', dashboardController.testEvolutionAudio);
+  app.get('/api/test/monday/board', dashboardController.testMondayBoard);
+  app.get('/api/test/monday/items', dashboardController.testMondayItems);
+  app.get('/api/test/monday/item/:itemId', dashboardController.testMondayItem);
+  app.post('/api/test/monday/update', dashboardController.testMondayUpdate);
+  app.post('/api/test/monday/find', dashboardController.findMondayContact);
+  app.post('/api/test/monday/create-real-flow', dashboardController.createRealFlowTest);
+  app.post('/api/admin/clean-database', dashboardController.cleanAndSyncDatabase);
+  app.get('/api/monday/full-board', dashboardController.getFullMondayBoard);
+
+  // 📁 File Management endpoints
+  app.get('/api/files', dashboardController.getFiles);
+  app.get('/api/message-templates', dashboardController.getMessageTemplates);
+  app.post('/api/message-templates', dashboardController.updateMessageTemplate);
+  app.post('/api/upload', dashboardController.uploadFile);
+  app.delete('/api/files/:filePath', dashboardController.deleteFile);
+  app.get('/api/files/read/:filePath', dashboardController.readTextFile);
 
   // Rota 404
   app.use('*', (req: Request, res: Response) => {

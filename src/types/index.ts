@@ -97,6 +97,7 @@ export type ContatoTipo = 'Primeiro Contato' | 'Segundo Contato' | 'Terceiro Con
 export interface ContatoConfig {
   tipo: ContatoTipo;
   arquivoTexto: string;
+  mensagemTexto?: string; // Texto inline como fallback para arquivos
   arquivoAudio?: string;
   proximoTipo?: ContatoTipo;
 }

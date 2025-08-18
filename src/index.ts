@@ -2,11 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import multer from 'multer';
 import { setupRoutes } from './routes';
 import { initializeDatabase } from './database/connection';
-// import { setupCronJobs } from './services/scheduler'; // Simplificado
+
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
+import { analyticsService } from './services/analyticsService';
 
 // Carrega variáveis de ambiente
 // Sempre carrega o .env para garantir que funcione
@@ -29,7 +31,7 @@ logger.info('Environment variables loaded:', {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 
 // Middlewares de segurança
 app.use(helmet({
@@ -52,6 +54,25 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// 📤 Multer para upload de arquivos
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /\.(txt|mp3|wav|ogg|m4a)$/i;
+    if (allowedTypes.test(file.originalname)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de arquivo não permitido'), false);
+    }
+  }
+});
+
+// Adiciona middleware de upload para rota específica
+app.use('/api/upload', upload.single('file'));
+
 // Middleware de logging
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`, {
@@ -70,13 +91,17 @@ app.use(errorHandler);
 // Inicialização do servidor
 async function startServer() {
   try {
-    // Inicializa banco de dados
+      // Inicializa banco de dados
     await initializeDatabase();
     logger.info('Database initialized successfully');
+    
+    // Inicializa sistema de analytics
+    await analyticsService.initialize();
+    logger.info('Analytics system initialized successfully');
 
     // 🎯 ExternalScheduler (estratégia robusta para Vercel Hobby)
     logger.info('🤖 ExternalScheduler configurado - use serviços externos para cron jobs');
-    logger.info('📋 Veja configurações em: /api/external-scheduler/config');
+    logger.info('🎯 Sistema operando 100% via webhooks Monday.com');
 
     // Inicia servidor
     app.listen(PORT, () => {

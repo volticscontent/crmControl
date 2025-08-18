@@ -27,10 +27,11 @@ class ContactService {
         return false;
       }
 
-      // Lê o arquivo de texto
-      const textoMensagem = await this.readTextFile(config.arquivoTexto, lead.nome);
+      // Lê o arquivo de texto usando fileManager ou usa texto inline
+      let textoMensagem = await this.getProcessedMessage(config, lead.nome);
+      
       if (!textoMensagem) {
-        logCrmAction(lead.id, 'TEXT_FILE_ERROR', `Erro ao ler arquivo: ${config.arquivoTexto}`, false);
+        logCrmAction(lead.id, 'TEXT_ERROR', `Erro ao obter mensagem para ${config.tipo}`, false);
         return false;
       }
 
@@ -82,9 +83,9 @@ class ContactService {
         }
       }
 
-      // Agenda próximo contato
-      await leadService.scheduleNextContact(lead.id);
-
+      // ⚠️ NÃO agenda mais próximo contato aqui - será feito pelo webhook
+      // O Monday.com atualizará o status via automação e o webhook marcará a data
+      
       logCrmAction(lead.id, 'CONTACT_DISPATCHED', `Contato ${config.tipo} enviado com sucesso`);
       return true;
 
@@ -95,45 +96,84 @@ class ContactService {
     }
   }
 
-  // Processa múltiplos leads pendentes (usado pelo scheduler)
-  async processScheduledContacts(): Promise<void> {
+
+
+  // 📝 OBTÉM MENSAGEM PROCESSADA (nova abordagem modular) COM FALLBACK
+  private async getProcessedMessage(config: any, nomeCliente: string): Promise<string | null> {
     try {
-      const leadsForDispatch = await leadService.getLeadsForDispatch();
+      logger.info(`📝 Processando mensagem para ${config.tipo}:`, {
+        temArquivoTexto: !!config.arquivoTexto,
+        temMensagemTexto: !!config.mensagemTexto,
+        arquivoTexto: config.arquivoTexto,
+        nomeCliente
+      });
+
+      const { fileManager } = await import('./fileManager');
       
-      if (leadsForDispatch.length === 0) {
-        logger.info('No leads scheduled for dispatch');
-        return;
-      }
-
-      logger.info(`Processing ${leadsForDispatch.length} scheduled contacts`);
-
-      // Processa leads com delay entre eles para evitar spam
-      for (let i = 0; i < leadsForDispatch.length; i++) {
-        const lead = leadsForDispatch[i];
+      // Primeiro tenta ler do arquivo
+      if (config.arquivoTexto) {
+        logger.info(`📂 Tentando ler arquivo: ${config.arquivoTexto}`);
+        const fileContent = await fileManager.readTextFile(config.arquivoTexto);
         
-        if (!lead) {
-          logger.warn(`Lead ${i} is undefined, skipping`);
-          continue;
+        if (fileContent) {
+          logger.info(`✅ Arquivo lido com sucesso, processando variáveis...`);
+          const processedMessage = await fileManager.processMessage(fileContent, { nome: nomeCliente });
+          logger.info(`📝 Mensagem final processada:`, { preview: processedMessage?.substring(0, 100) + '...' });
+          return processedMessage;
         }
-        
-        logger.info(`Processing scheduled contact ${i + 1}/${leadsForDispatch.length} - Lead ${lead.id}`);
-        
-        await this.processContactDispatch(lead);
-        
-        // Delay de 5 segundos entre envios para evitar rate limit
-        if (i < leadsForDispatch.length - 1) {
-          await this.delay(5000);
-        }
+        logger.warn(`❌ Arquivo não encontrado: ${config.arquivoTexto}, usando texto inline`);
       }
-
-      logger.info(`Completed processing ${leadsForDispatch.length} scheduled contacts`);
-
+      
+      // Fallback para texto inline
+      if (config.mensagemTexto) {
+        logger.info(`📝 Usando texto inline como fallback`);
+        const processedMessage = await fileManager.processMessage(config.mensagemTexto, { nome: nomeCliente });
+        logger.info(`📝 Mensagem inline processada:`, { preview: processedMessage?.substring(0, 100) + '...' });
+        return processedMessage;
+      }
+      
+      // 🆘 FALLBACK FINAL: Templates hardcoded (para produção sem arquivos)
+      logger.warn(`⚠️ Usando template hardcoded para ${config.tipo}`);
+      return this.getHardcodedTemplate(config.tipo, nomeCliente);
+      
     } catch (error) {
-      logger.error('Error processing scheduled contacts:', error);
+      logger.error(`❌ Erro ao processar mensagem para ${config.tipo}:`, error);
+      // Em caso de erro, usar template hardcoded
+      logger.warn(`🆘 Usando template hardcoded de emergência para ${config.tipo}`);
+      return this.getHardcodedTemplate(config.tipo, nomeCliente);
     }
   }
 
-  // Lê arquivo de texto e substitui placeholders
+  // 🆘 TEMPLATES HARDCODED (para quando arquivos não estão disponíveis)
+  private getHardcodedTemplate(tipoContato: string, nomeCliente: string): string {
+    const templates: Record<string, string> = {
+      'Primeiro Contato': `Boa tarde ${nomeCliente}! Tudo bem?
+
+É realmente do seu interesse entender como estruturar uma operação de Drop Global para faturar 50 mil euros por mês?`,
+
+      'Segundo Contato': `${nomeCliente}, tudo bem? - PRIMEIRA MENSAGEM
+
+É realmente do seu interesse entender como estruturar uma operação de Drop Global para faturar 50 mil euros por mês? - SEGUNDA MENSAGEM`,
+
+      'Terceiro Contato': `${nomeCliente}, devido a falta de resposta, entendemos que não é do seu interesse entender como você pode faturar 50 mil euros por mês.
+
+Com isso iremos tirar você da nossa base de contatos. Caso seja do seu interesse trocar essa papo, pode me sinalizar aqui.`,
+
+      'Ultimo Contato': `${nomeCliente}, devido a falta de retorno, estamos tirando você da nossa lista. De qualquer maneira, obrigado.`
+    };
+
+    const template = templates[tipoContato];
+    if (template) {
+      logger.info(`✅ Template hardcoded usado para ${tipoContato}`);
+      return template;
+    }
+
+    // Último recurso
+    logger.error(`❌ Nenhum template encontrado para ${tipoContato}`);
+    return `Olá ${nomeCliente}, entraremos em contato em breve.`;
+  }
+
+  // 📄 MÉTODO LEGADO (mantido para compatibilidade)
   private async readTextFile(fileName: string, nomeCliente: string): Promise<string | null> {
     try {
       const filePath = path.join(PATHS.ASSETS, fileName);

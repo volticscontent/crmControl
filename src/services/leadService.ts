@@ -12,6 +12,7 @@ class LeadService {
     this.timezone = process.env.TIMEZONE || DEFAULT_CONFIG.TIMEZONE;
   }
 
+  // 🎯 PERSISTÊNCIA OTIMIZADA - Apenas clientes no funil ativo
   async createOrUpdateLead(
     id: string,
     nome: string,
@@ -19,26 +20,25 @@ class LeadService {
     statusAtual: ContatoTipo
   ): Promise<Lead | null> {
     try {
-      // Verifica se o lead já existe
       const existingLead = await this.getLeadById(id);
       
       if (existingLead) {
-        // Atualiza lead existente
+        // ✅ ATUALIZAR lead existente (mantém no funil)
         await database.run(`
           UPDATE leads 
-          SET nome = ?, telefone = ?, status_atual = ?, data_ultima_atualizacao = CURRENT_TIMESTAMP
+          SET nome = ?, telefone = ?, status_atual = ?, ativo = 1, data_ultima_atualizacao = CURRENT_TIMESTAMP
           WHERE id = ?
         `, [nome, telefone, statusAtual, id]);
         
-        logCrmAction(id, 'UPDATE_LEAD', `Lead atualizado: ${nome}`);
+        logCrmAction(id, 'LEAD_UPDATED', `${nome} - Status: ${statusAtual}`);
       } else {
-        // Cria novo lead
+        // ✅ CRIAR novo lead (ativo no funil)
         await database.run(`
-          INSERT INTO leads (id, nome, telefone, status_atual)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO leads (id, nome, telefone, status_atual, ativo)
+          VALUES (?, ?, ?, ?, 1)
         `, [id, nome, telefone, statusAtual]);
         
-        logCrmAction(id, 'CREATE_LEAD', `Novo lead criado: ${nome}`);
+        logCrmAction(id, 'LEAD_CREATED', `${nome} - Entrou no funil: ${statusAtual}`);
       }
 
       return await this.getLeadById(id);
@@ -98,185 +98,28 @@ class LeadService {
     }
   }
 
-  async scheduleNextContact(leadId: string): Promise<boolean> {
-    try {
-      const lead = await this.getLeadById(leadId);
-      if (!lead) return false;
+  // ⚠️ MÉTODO REMOVIDO - Agora o cálculo é feito diretamente no webhook
+  // A data +24h é calculada e marcada pelo webhookController.calculateNext24Hours()
 
-      const config = CONTATOS_CONFIG[lead.statusAtual];
-      
-      // Se não há próximo tipo de contato, é o último
-      if (!config.proximoTipo) {
-        // Marca como "Não Respondeu" no Monday
-        await mondayService.updateStatus(leadId, MONDAY_STATUS.NAO_RESPONDEU);
-        await mondayService.updateProximoContato(leadId, null);
-        
-        // Desativa o lead
-        await database.run(`
-          UPDATE leads 
-          SET ativo = 0, data_ultima_atualizacao = CURRENT_TIMESTAMP
-          WHERE id = ?
-        `, [leadId]);
-        
-        logCrmAction(leadId, 'COMPLETE_SEQUENCE', 'Sequência de contatos finalizada - marcado como não respondeu');
-        return true;
-      }
-
-      // Calcula próximo disparo (+24 horas em horário comercial)
-      const proximoDisparo = this.calculateNextBusinessTime();
-
-      logger.info('Agendando próximo contato', {
-        leadId,
-        currentStatus: lead.statusAtual,
-        nextStatus: config.proximoTipo,
-        nextDispatch: proximoDisparo.toISOString(),
-        nextDispatchFormatted: proximoDisparo.toLocaleString('pt-BR', { timeZone: this.timezone })
-      });
-
-      // Atualiza status no Monday para próximo contato
-      await mondayService.updateStatus(leadId, config.proximoTipo);
-      await mondayService.updateProximoContato(leadId, proximoDisparo);
-
-      // Atualiza no banco local
-      await database.run(`
-        UPDATE leads 
-        SET status_atual = ?, proximo_disparo = ?, data_ultima_atualizacao = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [config.proximoTipo, proximoDisparo.toISOString(), leadId]);
-
-      logCrmAction(leadId, 'SCHEDULE_NEXT_CONTACT', 
-        `Próximo contato agendado: ${config.proximoTipo} em ${proximoDisparo.toLocaleString()}`);
-
-      return true;
-    } catch (error) {
-      logger.error(`Error scheduling next contact for lead ${leadId}:`, error);
-      return false;
-    }
-  }
-
+  // 🎯 DESATIVAR lead do funil (quando cliente responde)
   async markAsWaitingCall(leadId: string): Promise<boolean> {
     try {
-      // Atualiza no Monday
-      await mondayService.setAguardandoLigacao(leadId);
-
-      // Desativa no banco local (para parar sequência automática)
+      // ✅ DESATIVAR no banco (sai do funil automático)
       await database.run(`
         UPDATE leads 
         SET ativo = 0, proximo_disparo = NULL, data_ultima_atualizacao = CURRENT_TIMESTAMP
         WHERE id = ?
       `, [leadId]);
 
-      logCrmAction(leadId, 'MARK_WAITING_CALL', 'Lead marcado como aguardando ligação');
+      logCrmAction(leadId, 'REMOVED_FROM_FUNNEL', 'Lead removido do funil automático');
       return true;
     } catch (error) {
-      logger.error(`Error marking lead ${leadId} as waiting call:`, error);
+      logger.error(`Error removing lead ${leadId} from funnel:`, error);
       return false;
     }
   }
 
-  async getLeadsForDispatch(): Promise<Lead[]> {
-    try {
-      const now = moment().tz(this.timezone);
-      
-      const rows = await database.all<any>(`
-        SELECT * FROM leads 
-        WHERE ativo = 1 
-        AND proximo_disparo IS NOT NULL 
-        AND datetime(proximo_disparo) <= datetime('now')
-        ORDER BY proximo_disparo ASC
-      `);
 
-      return rows.map(row => ({
-        id: row.id,
-        nome: row.nome,
-        telefone: row.telefone,
-        statusAtual: row.status_atual as ContatoTipo,
-        proximoDisparo: new Date(row.proximo_disparo),
-        tentativas: row.tentativas,
-        dataCriacao: new Date(row.data_criacao),
-        dataUltimaAtualizacao: new Date(row.data_ultima_atualizacao),
-        ativo: Boolean(row.ativo)
-      }));
-    } catch (error) {
-      logger.error('Error getting leads for dispatch:', error);
-      return [];
-    }
-  }
-
-  private calculateNextBusinessTime(): Date {
-    const now = moment().tz(this.timezone);
-    let nextTime = now.clone().add(DEFAULT_CONFIG.INTERVALO_CONTATOS_HORAS, 'hours');
-
-    // Log detalhado do cálculo
-    const initialCalc = {
-      now: now.format('YYYY-MM-DD HH:mm:ss'),
-      timezone: this.timezone,
-      intervalHours: DEFAULT_CONFIG.INTERVALO_CONTATOS_HORAS,
-      initialNextTime: nextTime.format('YYYY-MM-DD HH:mm:ss'),
-      dayOfWeek: nextTime.day(), // 0=Sunday, 1=Monday, etc
-      hour: nextTime.hour()
-    };
-
-    // Ajusta para horário comercial se necessário
-    const workStart = DEFAULT_CONFIG.WORK_START_HOUR;
-    const workEnd = DEFAULT_CONFIG.WORK_END_HOUR;
-
-    // Se for fim de semana, vai para segunda
-    if (nextTime.day() === 0) { // Domingo
-      nextTime = nextTime.day(1).hour(workStart).minute(0).second(0);
-      logger.info('Ajuste fim de semana: Domingo → Segunda', { 
-        from: initialCalc.initialNextTime, 
-        to: nextTime.format('YYYY-MM-DD HH:mm:ss') 
-      });
-    } else if (nextTime.day() === 6) { // Sábado
-      nextTime = nextTime.day(8).hour(workStart).minute(0).second(0); // day(8) = próxima segunda
-      logger.info('Ajuste fim de semana: Sábado → Segunda', { 
-        from: initialCalc.initialNextTime, 
-        to: nextTime.format('YYYY-MM-DD HH:mm:ss') 
-      });
-    }
-
-    // Se for antes do horário comercial
-    if (nextTime.hour() < workStart) {
-      const beforeAdjust = nextTime.format('YYYY-MM-DD HH:mm:ss');
-      nextTime = nextTime.hour(workStart).minute(0).second(0);
-      logger.info('Ajuste horário comercial: Antes do início', { 
-        from: beforeAdjust, 
-        to: nextTime.format('YYYY-MM-DD HH:mm:ss'),
-        workStart: `${workStart}h`
-      });
-    }
-
-    // Se for depois do horário comercial
-    if (nextTime.hour() >= workEnd) {
-      const beforeAdjust = nextTime.format('YYYY-MM-DD HH:mm:ss');
-      nextTime = nextTime.add(1, 'day').hour(workStart).minute(0).second(0);
-      
-      // Verifica se o próximo dia é fim de semana
-      if (nextTime.day() === 0) { // Domingo
-        nextTime = nextTime.day(1);
-      } else if (nextTime.day() === 6) { // Sábado
-        nextTime = nextTime.day(8);
-      }
-      
-      logger.info('Ajuste horário comercial: Após o fim', { 
-        from: beforeAdjust, 
-        to: nextTime.format('YYYY-MM-DD HH:mm:ss'),
-        workEnd: `${workEnd}h`
-      });
-    }
-
-    const finalResult = nextTime.toDate();
-    
-    logger.info('Cálculo próximo contato finalizado', {
-      ...initialCalc,
-      finalTime: nextTime.format('YYYY-MM-DD HH:mm:ss'),
-      workHours: `${workStart}h às ${workEnd}h`,
-      hoursFromNow: nextTime.diff(now, 'hours', true).toFixed(1)
-    });
-
-    return finalResult;
-  }
 
   async incrementAttempts(leadId: string): Promise<void> {
     try {
@@ -308,6 +151,60 @@ class LeadService {
     } catch (error) {
       logger.error('Error getting lead stats:', error);
       return null;
+    }
+  }
+
+  // 👥 OBTER TODOS OS LEADS ATIVOS (para administração)
+  async getAllActiveLeads(): Promise<Lead[]> {
+    try {
+      const rows = await database.all<any>(`
+        SELECT * FROM leads 
+        WHERE ativo = 1 
+        ORDER BY data_criacao DESC
+      `);
+
+      return rows.map(row => ({
+        id: row.id,
+        nome: row.nome,
+        telefone: row.telefone,
+        statusAtual: row.status_atual as ContatoTipo,
+        proximoDisparo: row.proximo_disparo ? new Date(row.proximo_disparo) : null,
+        tentativas: row.tentativas,
+        dataCriacao: new Date(row.data_criacao),
+        dataUltimaAtualizacao: new Date(row.data_ultima_atualizacao),
+        ativo: Boolean(row.ativo)
+      }));
+    } catch (error) {
+      logger.error('Error getting all active leads:', error);
+      return [];
+    }
+  }
+
+  // 🎯 OBTER LEADS ATIVOS NO FUNIL (com próximo contato marcado)
+  async getActiveLeads(): Promise<Lead[]> {
+    try {
+      const rows = await database.all<any>(`
+        SELECT * FROM leads 
+        WHERE ativo = 1 
+        AND proximo_disparo IS NOT NULL
+        AND proximo_disparo != ''
+        ORDER BY proximo_disparo ASC, data_criacao DESC
+      `);
+
+      return rows.map(row => ({
+        id: row.id,
+        nome: row.nome,
+        telefone: row.telefone,
+        statusAtual: row.status_atual as ContatoTipo,
+        proximoDisparo: row.proximo_disparo ? new Date(row.proximo_disparo) : null,
+        tentativas: row.tentativas,
+        dataCriacao: new Date(row.data_criacao),
+        dataUltimaAtualizacao: new Date(row.data_ultima_atualizacao),
+        ativo: Boolean(row.ativo)
+      }));
+    } catch (error) {
+      logger.error('Error getting active leads:', error);
+      return [];
     }
   }
 }
