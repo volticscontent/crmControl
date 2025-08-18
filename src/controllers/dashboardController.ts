@@ -1722,7 +1722,9 @@ class DashboardController {
                 
                 // Show selected tab
                 document.getElementById(tabName).classList.add('active');
-                event.target.classList.add('active');
+                if (window.event && window.event.target) {
+                    window.event.target.classList.add('active');
+                }
                 
                 // Load data if needed
                 if (tabName === 'leads') {
@@ -2479,14 +2481,12 @@ class DashboardController {
                 // Atualizar categorias
                 const categoriesContainer = document.getElementById('category-breakdown');
                 if (data.categories && Object.keys(data.categories).length > 0) {
-                    categoriesContainer.innerHTML = Object.entries(data.categories).map(function(entry) {
-                        var category = entry[0];
-                        var count = entry[1];
-                        return '<div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">' +
-                            '<span style="color: var(--text-secondary);">' + category + '</span>' +
-                            '<span style="color: var(--text-primary); font-family: var(--font-mono);">' + count + '</span>' +
-                        '</div>';
-                    }).join('');
+                    categoriesContainer.innerHTML = Object.entries(data.categories).map(([category, count]) => \`
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                            <span style="color: var(--text-secondary);">\${category}</span>
+                            <span style="color: var(--text-primary); font-family: var(--font-mono);">\${count}</span>
+                        </div>
+                    \`).join('');
                 } else {
                     categoriesContainer.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 1rem;">Nenhuma categoria registrada</div>';
                 }
@@ -2501,35 +2501,37 @@ class DashboardController {
                     healthStatus.style.color = health.status === 'healthy' ? 'var(--success)' : 'var(--error)';
                     
                     if (health.details) {
-                        healthDetails.innerHTML = Object.entries(health.details).map(function(entry) {
-                            var key = entry[0];
-                            var value = entry[1];
-                            return '<div style="font-size: 0.75rem; margin: 0.25rem 0;">' +
-                                '<span style="color: var(--text-muted);">' + key + ':</span>' +
-                                '<span style="color: var(--text-secondary);">' + value + '</span>' +
-                            '</div>';
-                        }).join('');
+                        healthDetails.innerHTML = Object.entries(health.details).map(([key, value]) => \`
+                            <div style="font-size: 0.75rem; margin: 0.25rem 0;">
+                                <span style="color: var(--text-muted);">\${key}:</span>
+                                <span style="color: var(--text-secondary);">\${value}</span>
+                            </div>
+                        \`).join('');
                     }
                 } else {
                     healthStatus.textContent = 'Dados indisponíveis';
                     healthStatus.style.color = 'var(--text-muted)';
+                }\${new Date(error.timestamp).toLocaleString()}</div>
+                            <div class="error-operation">\${error.operation}</div>
+                            <div class="error-message">\${error.error_message || 'Unknown error'}</div>
+                        </div>
+                    \`).join('');
+                } else {
+                    errorsContainer.innerHTML = '<div class="no-errors">✅ Nenhum erro recente</div>';
                 }
-            }
                 
                 // Atualizar top operações
                 const operationsContainer = document.getElementById('top-operations');
                 if (data.operations && Object.keys(data.operations).length > 0) {
                     operationsContainer.innerHTML = Object.entries(data.operations)
-                        .sort(function(entryA, entryB) { return entryB[1] - entryA[1]; })
+                        .sort(([,a], [,b]) => b - a)
                         .slice(0, 10)
-                        .map(function(entry) {
-                            var operation = entry[0];
-                            var count = entry[1];
-                            return '<div class="operation-item">' +
-                                '<span class="operation-name">' + operation + '</span>' +
-                                '<span class="operation-count">' + count + '</span>' +
-                            '</div>';
-                        }).join('');
+                        .map(([operation, count]) => \`
+                            <div class="operation-item">
+                                <span class="operation-name">\${operation}</span>
+                                <span class="operation-count">\${count}</span>
+                            </div>
+                        \`).join('');
                 } else {
                     operationsContainer.innerHTML = '<div class="no-data">Nenhuma operação registrada</div>';
                 }
@@ -2538,20 +2540,33 @@ class DashboardController {
                 const categoriesContainer = document.getElementById('category-breakdown');
                 if (data.categories && Object.keys(data.categories).length > 0) {
                     categoriesContainer.innerHTML = Object.entries(data.categories)
-                        .map(function(entry) {
-                            var category = entry[0];
-                            var count = entry[1];
-                            return '<div class="category-item">' +
-                                '<span class="category-name">' + category.replace('_', ' ') + '</span>' +
-                                '<span class="category-count">' + count + '</span>' +
-                            '</div>';
-                        }).join('');
+                        .map(([category, count]) => \`
+                            <div class="category-item">
+                                <span class="category-name">\${category.replace('_', ' ')}</span>
+                                <span class="category-count">\${count}</span>
+                            </div>
+                        \`).join('');
                 } else {
                     categoriesContainer.innerHTML = '<div class="no-data">Nenhuma categoria registrada</div>';
                 }
             }
             
-
+            function updateSystemHealth(health) {
+                const statusElement = document.getElementById('health-status');
+                const detailsElement = document.getElementById('health-details');
+                
+                statusElement.textContent = health.status === 'healthy' ? '✅ Saudável' : 
+                                          health.status === 'warning' ? '⚠️ Atenção' : '🚨 Crítico';
+                statusElement.className = \`health-status \${health.status}\`;
+                
+                if (health.issues && health.issues.length > 0) {
+                    detailsElement.innerHTML = health.issues.map(issue => \`
+                        <div class="health-issue">\${issue}</div>
+                    \`).join('');
+                } else {
+                    detailsElement.innerHTML = '<div class="health-ok">Sistema funcionando normalmente</div>';
+                }
+            }
 
 
 
