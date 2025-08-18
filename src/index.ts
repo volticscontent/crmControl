@@ -40,7 +40,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       scriptSrcAttr: ["'unsafe-inline'"], // Permite event handlers inline
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
@@ -72,9 +72,6 @@ const upload = multer({
 
 // Adiciona middleware de upload para rota específica
 app.use('/api/upload', upload.single('file'));
-
-// Middleware para arquivos estáticos
-app.use(express.static('public'));
 
 // Middleware de logging
 app.use((req, res, next) => {
