@@ -2549,22 +2549,7 @@ class DashboardController {
                 }
             }
             
-            function updateSystemHealth(health) {
-                const statusElement = document.getElementById('health-status');
-                const detailsElement = document.getElementById('health-details');
-                
-                statusElement.textContent = health.status === 'healthy' ? '✅ Saudável' : 
-                                          health.status === 'warning' ? '⚠️ Atenção' : '🚨 Crítico';
-                statusElement.className = \`health-status \${health.status}\`;
-                
-                if (health.issues && health.issues.length > 0) {
-                    detailsElement.innerHTML = health.issues.map(issue => \`
-                        <div class="health-issue">\${issue}</div>
-                    \`).join('');
-                } else {
-                    detailsElement.innerHTML = '<div class="health-ok">Sistema funcionando normalmente</div>';
-                }
-            }
+
 
 
 
