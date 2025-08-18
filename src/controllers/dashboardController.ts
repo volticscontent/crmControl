@@ -2566,26 +2566,7 @@ class DashboardController {
                 }
             }
 
-            async function loadAnalyticsData() {
-                try {
-                    // Carrega dados de analytics
-                    const [analyticsResponse, healthResponse] = await Promise.all([
-                        fetch('/api/analytics'),
-                        fetch('/api/system-health')
-                    ]);
-                    
-                    if (analyticsResponse.ok && healthResponse.ok) {
-                        const analytics = await analyticsResponse.json();
-                        const health = await healthResponse.json();
-                        
-                        updateAnalyticsUI(analytics.data, health.health);
-                    } else {
-                        console.error('Erro ao carregar analytics');
-                    }
-                } catch (error) {
-                    console.error('Erro ao carregar analytics:', error);
-                }
-            }
+
 
             function updateAnalyticsUI(analytics, health) {
                 // Atualiza métricas principais
