@@ -65,7 +65,7 @@ const upload = multer({
     if (allowedTypes.test(file.originalname)) {
       cb(null, true);
     } else {
-      cb(new Error('Tipo de arquivo não permitido'), false);
+      cb(null, false);
     }
   }
 });

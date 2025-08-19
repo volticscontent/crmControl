@@ -60,7 +60,7 @@ class EdgeCaseHandler {
         return await evolutionService.sendAudioMessage(phone, audioFile, message);
       } else {
         // Retry para texto
-        return await evolutionService.sendTextMessage(phone, message, true); // skipRetry = true para evitar loop
+        return await evolutionService.sendTextMessage(phone, message); // skipRetry removido para evitar erro
       }
     } catch (error) {
       logger.error(`Retry failed for lead ${leadId}:`, error);

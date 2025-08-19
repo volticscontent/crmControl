@@ -91,7 +91,7 @@ class WebhookController {
 
     try {
       // 🎯 BUSCAR lead pelo telefone
-      const normalizedPhone = evolutionService.getInstance().normalizePhoneNumber(phoneNumber);
+      const normalizedPhone = evolutionService.getInstance().normalizePhoneNumber(phoneNumber || '');
       const lead = await leadService.getLeadByPhone(normalizedPhone);
       
       if (!lead) {

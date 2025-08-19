@@ -1,6 +1,6 @@
 import { Express, Request, Response } from 'express';
 import { webhookController } from '../controllers/webhookController';
-import { dashboardController } from '../controllers/dashboardController';
+import { mainDashboardController, overviewController, analyticsController, leadsController, filesController, controlsController } from '../controllers/dashboard';
 import assetsRouter from './assetsRoutes';
 
 export function setupRoutes(app: Express): void {
@@ -42,50 +42,68 @@ export function setupRoutes(app: Express): void {
 
   
   // Dashboard principal
-  app.get('/dashboard', dashboardController.dashboard);
-  app.get('/config', dashboardController.dashboard); // Alias
-  app.get('/monitor', dashboardController.dashboard); // Alias
+  app.get('/dashboard', mainDashboardController.dashboard);
+  app.get('/config', mainDashboardController.dashboard); // Alias
+  app.get('/monitor', mainDashboardController.dashboard); // Alias
   
-  // APIs do dashboard simplificadas
-  app.get('/api/logs', dashboardController.getLogs);
-  app.get('/api/logs/detailed', dashboardController.getDetailedLogs);
-  app.get('/api/status', dashboardController.getStatus);
+  // Rotas das abas modulares - ENDPOINTS QUE ESTAVAM FALTANDO
+  app.get('/api/dashboard/overview', overviewController.getOverviewTab);
+  app.get('/api/dashboard/analytics', analyticsController.getAnalyticsTab);
+  app.get('/api/dashboard/leads', leadsController.getLeadsTab);
+  app.get('/api/dashboard/files', filesController.getFilesTab);
+  app.get('/api/dashboard/controls', controlsController.getControlsTab);
+  app.get('/api/dashboard/logs', leadsController.getLeadsTab); // Reutiliza a aba leads que já tem logs
+  
+  // APIs dos dados
+  app.get('/api/overview/data', overviewController.getOverviewData);
+  app.get('/api/analytics', analyticsController.getAnalyticsData);
+  app.get('/api/logs', leadsController.getLogs);
+  app.get('/api/webhook-logs', leadsController.getWebhookLogs);
+  app.get('/api/leads', leadsController.getLeads);
+  app.get('/api/leads/stats', leadsController.getLeadsStats);
+  app.get('/api/files', filesController.getFiles);
+  app.get('/api/message-templates', filesController.getMessageTemplates);
+  app.post('/api/message-templates', filesController.updateMessageTemplate);
+  app.post('/api/upload', filesController.uploadFile);
+  app.delete('/api/files/:filePath', filesController.deleteFile);
+  app.get('/api/files/read/:filePath', filesController.readTextFile);
+  app.get('/api/system/info', controlsController.getSystemInfo);
+  app.get('/api/test/evolution', controlsController.testEvolution);
+  app.get('/api/test/monday', controlsController.testMonday);
   
   // Assets (arquivos de texto e áudio)
   app.use('/assets', assetsRouter);
   
-  // 🎯 Novos endpoints para melhor monitoramento
-  app.get('/api/leads', dashboardController.getLeads);
-  app.get('/api/webhook-logs', dashboardController.getWebhookLogs);
-  app.get('/api/test/evolution', dashboardController.testEvolution);
-  app.get('/api/test/monday', dashboardController.testMonday);
+  // 🎯 TODO: Implementar novos endpoints modularizados
+  // app.get('/api/leads', leadsController.getLeads);
+  // app.get('/api/test/evolution', controlsController.testEvolution);
+  // app.get('/api/test/monday', controlsController.testMonday);
 
-  // 📊 Analytics e métricas
-  app.get('/api/analytics', dashboardController.getAnalytics);
-  app.get('/api/system-health', dashboardController.getSystemHealth);
+  // 📊 TODO: Analytics e métricas
+  // app.get('/api/system-health', analyticsController.getSystemHealth);
   
-  // 🔍 Debug e testes detalhados
-  app.get('/api/debug/env', dashboardController.debugEnvVars);
-  app.get('/api/test/evolution/status', dashboardController.testEvolutionStatus);
-  app.get('/api/test/evolution/info', dashboardController.testEvolutionInfo);
-  app.post('/api/test/evolution/message', dashboardController.testEvolutionMessage);
-  app.post('/api/test/evolution/audio', dashboardController.testEvolutionAudio);
-  app.get('/api/test/monday/board', dashboardController.testMondayBoard);
-  app.get('/api/test/monday/items', dashboardController.testMondayItems);
-  app.get('/api/test/monday/item/:itemId', dashboardController.testMondayItem);
-  app.post('/api/test/monday/update', dashboardController.testMondayUpdate);
-  app.post('/api/test/monday/find', dashboardController.findMondayContact);
-  app.post('/api/test/monday/create-real-flow', dashboardController.createRealFlowTest);
-  app.post('/api/admin/clean-database', dashboardController.cleanAndSyncDatabase);
-  app.get('/api/monday/full-board', dashboardController.getFullMondayBoard);
+  // 🔍 TODO: Debug e testes detalhados
+  // app.get('/api/debug/env', controlsController.debugEnvVars);
+  // app.get('/api/test/evolution/status', controlsController.testEvolutionStatus);
+  // app.get('/api/test/evolution/info', controlsController.testEvolutionInfo);
+  // app.post('/api/test/evolution/message', controlsController.testEvolutionMessage);
+  // app.post('/api/test/evolution/audio', controlsController.testEvolutionAudio);
+  // app.get('/api/test/monday/board', controlsController.testMondayBoard);
+  // app.get('/api/test/monday/items', controlsController.testMondayItems);
+  // app.get('/api/test/monday/item/:itemId', controlsController.testMondayItem);
+  // app.post('/api/test/monday/update', controlsController.testMondayUpdate);
+  // app.post('/api/test/monday/find', controlsController.findMondayContact);
+  // app.post('/api/test/monday/create-real-flow', controlsController.createRealFlowTest);
+  // app.post('/api/admin/clean-database', controlsController.cleanAndSyncDatabase);
+  // app.get('/api/monday/full-board', controlsController.getFullMondayBoard);
 
-  // 📁 File Management endpoints
-  app.get('/api/files', dashboardController.getFiles);
-  app.get('/api/message-templates', dashboardController.getMessageTemplates);
-  app.post('/api/message-templates', dashboardController.updateMessageTemplate);
-  app.post('/api/upload', dashboardController.uploadFile);
-  app.delete('/api/files/:filePath', dashboardController.deleteFile);
-  app.get('/api/files/read/:filePath', dashboardController.readTextFile);
+  // 📁 TODO: File Management endpoints
+  // app.get('/api/files', filesController.getFiles);
+  // app.get('/api/message-templates', filesController.getMessageTemplates);
+  // app.post('/api/message-templates', filesController.updateMessageTemplate);
+  // app.post('/api/upload', filesController.uploadFile);
+  // app.delete('/api/files/:filePath', filesController.deleteFile);
+  // app.get('/api/files/read/:filePath', filesController.readTextFile);
 
   // Rota 404
   app.use('*', (req: Request, res: Response) => {
@@ -100,7 +118,16 @@ export function setupRoutes(app: Express): void {
         'GET /dashboard',
         'GET /config',
         'GET /monitor',
-        'GET /assets/:filename'
+        'GET /assets/:filename',
+        'GET /api/dashboard/overview',
+        'GET /api/dashboard/analytics', 
+        'GET /api/dashboard/leads',
+        'GET /api/dashboard/files',
+        'GET /api/dashboard/controls',
+        'GET /api/dashboard/logs',
+        'GET /api/logs',
+        'GET /api/files',
+        'GET /api/system/info'
       ]
     });
   });

@@ -46,8 +46,7 @@ Com isso iremos tirar você da nossa base de contatos. Caso seja do seu interess
   'Ultimo Contato': {
     tipo: 'Ultimo Contato',
     arquivoTexto: 'Ultimo Contato/TXT ULTIMO CONTATO.txt',
-    mensagemTexto: `{nome}, devido a falta de retorno, estamos tirando você da nossa lista. De qualquer maneira, obrigado.`,
-    proximoTipo: null
+    mensagemTexto: `{nome}, devido a falta de retorno, estamos tirando você da nossa lista. De qualquer maneira, obrigado.`
   }
 };
 

@@ -206,9 +206,9 @@ class FileManager {
     
     return {
       tipo,
-      textoPersonalizado: config.mensagemTexto,
+      textoPersonalizado: config.mensagemTexto || '',
       arquivoTexto: config.arquivoTexto,
-      arquivoAudio: config.arquivoAudio,
+      arquivoAudio: config.arquivoAudio || '',
       variaveis
     };
   }
@@ -243,7 +243,7 @@ class FileManager {
     let match;
 
     while ((match = regex.exec(text)) !== null) {
-      if (!variables.includes(match[1])) {
+      if (match[1] && !variables.includes(match[1])) {
         variables.push(match[1]);
       }
     }

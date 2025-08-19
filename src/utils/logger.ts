@@ -168,9 +168,9 @@ if (canWriteFiles && !isServerless) {
   
   // Transport personalizado com fallback
   class RobustFileTransport extends winston.transports.File {
-    log(info: any, callback: () => void) {
+    log(info: any, callback?: () => void) {
       try {
-        super.log(info, callback);
+        super.log(info, callback || (() => {}));
         // Adiciona à memória como backup
         addToMemoryLog(info.level, info.message, info);
       } catch (error) {
